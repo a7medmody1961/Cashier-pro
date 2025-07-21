@@ -27,4 +27,36 @@ module.exports = (ipcMain) => {
     ipcMain.handle('customers:add-address', (e, d) => db.prepare("INSERT INTO customer_addresses (customer_id, address) VALUES (?, ?)").run(d.customerId, d.address));
     ipcMain.handle('customers:update-address', (e, d) => db.prepare("UPDATE customer_addresses SET address = ? WHERE id = ?").run(d.address, d.id));
     ipcMain.handle('customers:delete-address', (e, id) => db.prepare("DELETE FROM customer_addresses WHERE id = ?").run(id));
+
+    // إضافة جديدة: جلب جميع المعاملات (المبيعات) لعميل معين مع تفاصيل المنتجات
+    ipcMain.handle('customers:get-transactions', (e, customerId) => {
+        const sales = db.prepare(`
+            SELECT 
+                s.id AS sale_id, 
+                s.total_amount, 
+                s.created_at, 
+                s.payment_method, 
+                s.order_type,
+                s.manual_discount_amount,
+                s.manual_discount_type,
+                s.loyalty_points  -- <<<<< تم إضافة هذا السطر لجلب نقاط الولاء من الفاتورة
+            FROM sales s
+            WHERE s.customer_id = ?
+            ORDER BY s.created_at DESC
+        `).all(customerId);
+
+        // لكل عملية بيع، جلب تفاصيل المنتجات
+        const salesWithItems = sales.map(sale => {
+            const items = db.prepare(`
+                SELECT 
+                    si.product_name, 
+                    si.quantity, 
+                    si.price_per_item
+                FROM sale_items si
+                WHERE si.sale_id = ?
+            `).all(sale.sale_id);
+            return { ...sale, items };
+        });
+        return salesWithItems;
+    });
 };

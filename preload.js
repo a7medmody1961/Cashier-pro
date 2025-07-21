@@ -68,6 +68,8 @@ contextBridge.exposeInMainWorld('api', {
   deleteCustomerAddress: (addressId) => ipcRenderer.invoke('customers:delete-address', addressId),
   exportCustomers: () => ipcRenderer.invoke('customers:export-excel'),
   importCustomers: (data) => ipcRenderer.invoke('customers:import-excel', data),
+  // إضافة جديدة: جلب معاملات العميل
+  getCustomerTransactions: (customerId) => ipcRenderer.invoke('customers:get-transactions', customerId),
 
   // --- Expenses ---
   getExpenses: (dateRange) => ipcRenderer.invoke('expenses:get', dateRange),

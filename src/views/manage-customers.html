@@ -32,6 +32,29 @@
             <tbody></tbody>
         </table>
     </div>
+
+    <div id="customer-transactions-section" class="table-container" style="display: none; margin-top: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="transactions-customer-name">سجل معاملات العميل: </h2>
+            <button id="close-transactions-btn" class="btn btn-secondary">إغلاق</button>
+        </div>
+        <table id="customer-transactions-table" class="striped-table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>النوع</th>
+                    <th>طريقة الدفع</th>
+                    <th>الخصم اليدوي</th>
+                    <th>الإجمالي</th>
+                    <th>نقاط الولاء المكتسبة</th> <th>المنتجات</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-table-body">
+                </tbody>
+        </table>
+    </div>
+
 </div>
 
 <div id="address-modal" class="modal">
