@@ -155,7 +155,8 @@ export function init() {
         };
 
         const orderTypeMap = {
-            'dine_in': 'داخلي',
+            'dine_in': 'صالة',
+            'dine-in': 'صالة', // إضافة هذا السطر لترجمة "Dine-in" بشكل صحيح
             'takeaway': 'خارجي',
             'delivery': 'توصيل'
         };
