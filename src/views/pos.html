@@ -1,0 +1,94 @@
+<div class="pos-layout">
+    <div class="products-section-container">
+    <div class="content-header">
+        <div class="search-and-quantity-controls"> <input type="text" id="search-bar" placeholder="بحث عن منتج بالاسم أو الباركود...">
+            </div>
+    </div>
+    <div id="product-grid" class="product-grid">
+        </div>
+</div>
+
+    <aside class="invoice-section-container">
+        <div class="invoice-header">
+            <div id="order-type-selector" class="order-type-selector">
+                <button class="btn active" data-type="dine-in">صالة</button>
+                <button class="btn" data-type="delivery">توصيل</button>
+            </div>
+            <div id="customer-section" style="position: relative;">
+        <div id="dine-in-customer-form" class="customer-details-form" style="display: block;">
+            <div class="form-group">
+                <label for="dine-in-customer-name">اسم العميل (اختياري)</label>
+                <input type="text" id="dine-in-customer-name">
+            </div>
+            <div class="form-group">
+                <label for="dine-in-customer-phone">رقم هاتف العميل (اختياري)</label>
+                <input type="tel" id="dine-in-customer-phone">
+            </div>
+        </div>
+        <div id="delivery-customer-form" class="customer-details-form" style="display: none;">
+            <div class="form-group">
+                <label for="customer-phone">رقم هاتف العميل</label>
+                <input type="tel" id="customer-phone" required>
+                </div>
+            <div class="form-group">
+                <label for="customer-name">اسم العميل</label>
+                <input type="text" id="customer-name" required>
+            </div>
+            <div id="address-selection-container" class="form-group">
+                <label for="customer-address">العنوان</label>
+                <input type="text" id="customer-address" required>
+            </div>
+        </div>
+        <div id="customer-search-results"></div> 
+    </div>
+        </div>
+        <div id="invoice-items" class="invoice-items-list">
+            <p class="empty-invoice">الفاتورة فارغة</p>
+        </div>
+        <footer class="invoice-footer">
+            <div class="invoice-summary-grid">
+                <span>المجموع الفرعي</span><span id="sub-total">0.00</span>
+                <span>الضريبة</span><span id="vat-total">0.00</span>
+                <span>خدمة</span><span id="service-total">0.00</span>
+                <span id="delivery-label" style="display: none;">توصيل</span><span id="delivery-total" style="display: none;">0.00</span>
+                <span id="manual-discount-label" style="display: none;">الخصم اليدوي</span><span id="manual-discount-value" style="display: none;">0.00</span>
+            </div>
+            <div class="invoice-summary">
+                <span>الإجمالي</span>
+                <span class="total-price" id="grand-total">0.00</span>
+            </div>
+            
+            <div id="loyalty-points-section" class="customer-details-form" style="display: none;">
+                <div class="form-group">
+                    <label>نقاط الولاء المتاحة:</label>
+                    <span id="customer-loyalty-points" class="loyalty-points-display">0 نقطة</span>
+                </div>
+                <div class="form-group">
+                    <label for="apply-loyalty-discount">تطبيق خصم نقاط الولاء</label>
+                    <input type="checkbox" id="apply-loyalty-discount" class="loyalty-checkbox">
+                </div>
+                <div class="form-group" id="loyalty-discount-display" style="display: none;">
+                    <label>قيمة الخصم:</label>
+                    <span id="loyalty-discount-value" class="loyalty-points-display">0.00</span>
+                </div>
+            </div>
+
+            <div id="manual-discount-section" class="manual-discount-form" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="manual-discount-input">الخصم اليدوي:</label>
+                    <input type="number" id="manual-discount-input" placeholder="القيمة" min="0" step="any">
+                    <select id="manual-discount-type-select">
+                        <option value="fixed">مبلغ ثابت</option>
+                        <option value="percentage">نسبة مئوية (%)</option>
+                    </select>
+                    <button id="apply-manual-discount-btn" class="btn btn-secondary">تطبيق</button>
+                    <button id="clear-manual-discount-btn" class="btn btn-danger" style="display:none;">إزالة</button>
+                </div>
+            </div>
+            <div class="action-buttons" style="margin-top: 15px;">
+                <button id="cancel-order-btn" class="btn btn-danger">إلغاء</button>
+                <button id="finalize-button" class="btn btn-primary" disabled>إتمام الدفع</button>
+            </div>
+        </footer>
+    </aside>
+</div>

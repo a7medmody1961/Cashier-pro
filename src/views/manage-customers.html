@@ -1,0 +1,53 @@
+<div class="management-container">
+    <h1>إدارة العملاء</h1>
+    <div class="page-actions">
+        <button id="import-customers-btn" class="btn btn-secondary"><i class="fa-solid fa-file-import"></i> استيراد من Excel</button>
+        <button id="export-customers-btn" class="btn btn-secondary"><i class="fa-solid fa-file-excel"></i> تصدير إلى Excel</button>
+    </div>
+    <div class="form-container">
+        <h2>إضافة عميل جديد</h2>
+        <form id="add-customer-form">
+            <div class="form-grid-columns">
+                <div class="form-group"><label for="new-customer-name">اسم العميل</label><input type="text" id="new-customer-name" required></div>
+                <div class="form-group"><label for="new-customer-phone">رقم الهاتف</label><input type="tel" id="new-customer-phone" required></div>
+                <div class="form-group"><label for="new-customer-address">العنوان الافتراضي</label><input type="text" id="new-customer-address" required></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">إضافة العميل</button></div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h2>قائمة العملاء</h2>
+        <table id="customers-table">
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>الهاتف</th>
+                    <th>العنوان الافتراضي</th>
+                    <th>إجمالي الإنفاق</th>
+                    <th>عدد الطلبات</th>
+                    <th>النقاط المكتسبة الكلية</th> <th>النقاط المتبقية للاستخدام</th> <th>النقاط التي تم استخدامها سابقاً</th> <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="address-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" title="إغلاق">&times;</span>
+        <h2 id="modal-customer-name">عناوين العميل</h2>
+        <input type="hidden" id="modal-customer-id">
+        <ul id="addresses-list"></ul>
+        <form id="add-address-form" style="margin-top: 20px;">
+            <div class="form-group">
+                <label for="new-address">إضافة عنوان جديد</label>
+                <div style="display: flex;">
+                    <input type="text" id="new-address" required style="flex-grow: 1; margin-left: 10px;">
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

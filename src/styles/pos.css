@@ -1,0 +1,283 @@
+/*
+  File: src/styles/pos.css
+  Version: 1.0 (New File)
+  Description: Contains all styles specific to the Point of Sale (POS) screen.
+  This file was created by refactoring the original main.css.
+*/
+
+.pos-layout {
+    display: grid;
+    grid-template-columns: 1fr 420px; /* Main content and sidebar */
+    gap: 20px;
+    height: 100%;
+}
+
+/* --- Products Section --- */
+.products-section-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface-solid);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+.content-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-border);
+}
+#search-bar {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1.1em;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+}
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+    padding: 15px;
+    overflow-y: auto;
+}
+.product-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    padding: 10px;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE 10+ */
+    user-select: none;         /* Standard */
+}
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+.product-card img {
+    width: 100%;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+.product-card .product-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    flex-grow: 1;
+}
+.product-card .product-price {
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+/* --- Invoice Section --- */
+.invoice-section-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface-solid);
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+}
+.invoice-header {
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 15px;
+}
+.order-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    background: var(--color-bg);
+    padding: 5px;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 15px;
+}
+.order-type-selector .btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+}
+.order-type-selector .btn.active {
+    background: var(--color-surface-solid);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+#customer-section input {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-border);
+    margin-bottom: 10px;
+}
+.invoice-items-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px; /* For scrollbar */
+}
+.empty-invoice {
+    text-align: center;
+    color: var(--color-text-muted);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.invoice-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+.item-details .item-name {
+    font-weight: bold;
+}
+.item-details .item-price {
+    font-size: 0.9em;
+    color: var(--color-text-muted);
+}
+.item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* قلل المسافة قليلاً */
+}
+.item-quantity button {
+    background: none;
+    border: 1px solid var(--color-border);
+    width: 28px; /* قلل الحجم قليلاً */
+    height: 28px; /* قلل الحجم قليلاً */
+    border-radius: 50%;
+    font-size: 1em; /* قلل حجم الخط */
+    line-height: 1;
+    display: flex; /* لمركزة المحتوى */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.item-quantity button:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+.item-quantity button:active {
+    transform: scale(0.95);
+}
+
+.item-quantity-input {
+    width: 50px; /* عرض مناسب لحقل الكمية */
+    padding: 5px;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.9em;
+}
+.invoice-footer { padding-top: 15px; border-top: 1px solid var(--color-border); margin-top: auto; }
+.invoice-summary-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; margin-bottom: 15px; }
+.invoice-summary-grid span:nth-child(even) { text-align: left; font-weight: bold; }
+.invoice-summary { display: flex; justify-content: space-between; font-size: 1.8em; font-weight: bold; margin-bottom: 15px; padding: 10px; background: var(--color-bg); border-radius: var(--border-radius-md); }
+.total-price { color: var(--color-primary); }
+.action-buttons { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.product-icon-large {
+    width: 100px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em; /* حجم كبير للأيقونة */
+    color: var(--color-primary); /* لون الأيقونة */
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 10px;
+}
+.search-and-quantity-controls {
+    display: flex;
+    gap: 10px; /* مسافة بين شريط البحث وحقل الكمية */
+    align-items: center;
+}
+
+#search-bar {
+    flex-grow: 1; /* لجعل شريط البحث يأخذ المساحة المتاحة */
+}
+
+/* إخفاء أسهم حقل الكمية في input type="number" */
+    .item-quantity-input::-webkit-outer-spin-button,
+    .item-quantity-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .item-quantity-input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+        appearance: textfield; /* أضف هذا السطر للخاصية القياسية */
+    }
+    /*
+    /* أنماط نقاط الولاء */
+    #loyalty-points-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .loyalty-points-display {
+        font-weight: bold;
+        color: var(--color-primary);
+        font-size: 1.1em;
+        margin-right: 5px;
+    }
+
+    .loyalty-checkbox {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--color-primary);
+        margin-right: 10px;
+    }
+
+    /* أنماط لتنسيق checkbox مع label */
+    #loyalty-points-section .form-group label {
+        display: inline-block;
+        margin-bottom: 0;
+        vertical-align: middle;
+        font-weight: normal;
+        color: var(--color-text);
+    }
+    /* أنماط قائمة اقتراحات بحث العملاء */
+    #customer-search-results {
+        position: absolute; /* لوضعها فوق العناصر الأخرى */
+        z-index: 10; /* للتأكد من أنها تظهر فوق عناصر أخرى */
+        background-color: var(--color-surface-solid);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-md);
+        max-height: 200px;
+        overflow-y: auto;
+        width: calc(100% - 2px); /* لتغطية عرض حقل الإدخال (مع الحدود) */
+        margin-top: 5px; /* مسافة صغيرة أسفل حقل الإدخال */
+        display: none; /* مخفية افتراضيا */
+    }
+
+    .customer-search-result {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .customer-search-result:last-child {
+        border-bottom: none; /* إزالة الحد السفلي للعنصر الأخير */
+    }
+
+    .customer-search-result:hover {
+        background-color: var(--color-primary-light);
+        color: var(--color-primary);
+    }

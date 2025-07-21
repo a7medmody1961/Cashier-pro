@@ -1,0 +1,69 @@
+/* في ملف: src/styles/theme.css */
+/* الإصدار 2.0: تم تحديث الخطوط والمتغيرات للتصميم الجديد */
+
+/* ملاحظة هامة:
+   لضمان عمل الخطوط بدون انترنت، يجب تحميل ملفات الخطوط التالية:
+   1. Tajawal-Regular.ttf
+   2. Tajawal-Bold.ttf
+   ووضعها داخل مجلد جديد بالمسار: src/assets/fonts/
+*/
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../assets/fonts/Tajawal-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../assets/fonts/Tajawal-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+:root {
+    --font-main: 'Tajawal', sans-serif;
+    --transition-speed: 0.3s;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+}
+
+/* --- THEME: LIGHT MODE --- */
+body {
+    --color-bg: #f0f4f8;
+    --color-surface: rgba(255, 255, 255, 0.6);
+    --color-surface-solid: #ffffff;
+    --color-primary: #2563eb; /* أزرق عصري */
+    --color-primary-dark: #1d4ed8;
+    --color-primary-light: rgba(37, 99, 235, 0.1);
+    --color-secondary: #059669; /* أخضر مكمل */
+    --color-danger: #dc2626;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-border: rgba(203, 213, 225, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+    --backdrop-blur: 16px;
+}
+
+/* --- THEME: DARK MODE --- */
+body.dark-mode {
+    --color-bg: #0f172a;
+    --color-surface: rgba(30, 41, 59, 0.6);
+    --color-surface-solid: #1e293b;
+    --color-primary: #38bdf8; /* سماوي فاتح */
+    --color-primary-dark: #0ea5e9;
+    --color-primary-light: rgba(56, 189, 248, 0.1);
+    --color-secondary: #10b981; /* أخضر فاتح */
+    --color-danger: #f87171;
+    --color-text: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-border: rgba(71, 85, 105, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --backdrop-blur: 16px;
+}

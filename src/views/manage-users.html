@@ -1,0 +1,87 @@
+<!--
+  File: src/views/manage-users.html
+  Version: 1.1
+  Changes:
+  - (Task 6 - Permissions) Replaced the 'Role' dropdown with a detailed permissions checkbox grid.
+-->
+<div class="management-container">
+    <h1>إدارة المستخدمين</h1>
+    <div class="form-container">
+        <h2>إضافة / تعديل مستخدم</h2>
+        <form id="user-form">
+            <input type="hidden" id="user-id">
+            <div class="form-grid-columns">
+                <div class="form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور (اتركه فارغاً لعدم التغيير)</label>
+                    <input type="password" id="password">
+                </div>
+                 <div class="form-group">
+                    <label for="role">الدور الأساسي</label>
+                    <div class="custom-select-wrapper">
+                        <select id="role" required>
+                            <option value="Cashier">كاشير</option>
+                            <option value="Admin">مدير</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- (Task 6) New Permissions Section -->
+            <div class="permissions-container">
+                <h3>صلاحيات الوصول للصفحات</h3>
+                <div id="permissions-grid" class="permissions-grid">
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-pos" data-page="pos" checked disabled>
+                        <label for="perm-pos">نقطة البيع</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-manage-products" data-page="manage-products">
+                        <label for="perm-manage-products">إدارة المنتجات</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-manage-customers" data-page="manage-customers">
+                        <label for="perm-manage-customers">إدارة العملاء</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-manage-expenses" data-page="manage-expenses">
+                        <label for="perm-manage-expenses">إدارة المصروفات</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-reports" data-page="reports">
+                        <label for="perm-reports">التقارير</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-manage-users" data-page="manage-users">
+                        <label for="perm-manage-users">إدارة المستخدمين</label>
+                    </div>
+                    <div class="permission-item">
+                        <input type="checkbox" id="perm-settings" data-page="settings">
+                        <label for="perm-settings">الإعدادات</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">حفظ المستخدم</button>
+                <button type="button" id="clear-form-btn" class="btn btn-secondary">مسح الحقول</button>
+            </div>
+        </form>
+    </div>
+    <div class="table-container">
+        <h2>قائمة المستخدمين</h2>
+        <table id="users-table">
+            <thead>
+                <tr>
+                    <th>اسم المستخدم</th>
+                    <th>الدور</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>

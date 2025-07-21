@@ -1,0 +1,54 @@
+    <!-- src/views/settings.html -->
+
+    <div class="management-container">
+        <h1>إعدادات البرنامج</h1>
+        <form id="settings-form">
+            <div class="form-container">
+                <h3>الإعدادات العامة</h3>
+                <div class="form-grid-columns">
+                    <div class="form-group"><label for="storeName">اسم المتجر (للفاتورة)</label><input type="text" id="storeName"></div>
+                    <div class="form-group"><label for="storePhone">رقم هاتف المتجر (للفاتورة)</label><input type="text" id="storePhone"></div>
+                    <div class="form-group"><label for="currency">العملة (مثال: ج.م)</label><input type="text" id="currency"></div>
+                </div>
+            </div>
+            <div class="form-container">
+                <h3>الضرائب والرسوم (في الصالة)</h3>
+                <div class="form-grid-columns">
+                    <div class="form-group"><label for="vatValueDineIn">قيمة ضريبة القيمة المضافة (VAT)</label><input type="number" id="vatValueDineIn" step="0.01" min="0"></div>
+                    <div class="form-group"><label for="vatTypeDineIn">نوع الضريبة</label><div class="custom-select-wrapper"><select id="vatTypeDineIn"><option value="percentage">نسبة مئوية (%)</option><option value="fixed">مبلغ ثابت</option></select></div></div>
+                    <div class="form-group"><label for="serviceValueDineIn">قيمة رسوم الخدمة</label><input type="number" id="serviceValueDineIn" step="0.01" min="0"></div>
+                    <div class="form-group"><label for="serviceTypeDineIn">نوع رسوم الخدمة</label><div class="custom-select-wrapper"><select id="serviceTypeDineIn"><option value="percentage">نسبة مئوية (%)</option><option value="fixed">مبلغ ثابت</option></select></div></div>
+                </div>
+            </div>
+            <div class="form-container">
+                <h3>الضرائب والرسوم (للدليفري)</h3>
+                <div class="form-grid-columns">
+                    <div class="form-group"><label for="deliveryFee">رسوم التوصيل</label><input type="number" id="deliveryFee" step="0.01" min="0"></div>
+                    <div class="form-group"><label for="vatValueDelivery">قيمة ضريبة القيمة المضافة (VAT)</label><input type="number" id="vatValueDelivery" step="0.01" min="0"></div>
+                    <div class="form-group"><label for="vatTypeDelivery">نوع الضريبة</label><div class="custom-select-wrapper"><select id="vatTypeDelivery"><option value="percentage">نسبة مئوية (%)</option><option value="fixed">مبلغ ثابت</option></select></div></div>
+                    <div class="form-group"><label for="serviceValueDelivery">قيمة رسوم الخدمة</label><input type="number" id="serviceValueDelivery" step="0.01" min="0"></div>
+                    <div class="form-group"><label for="serviceTypeDelivery">نوع رسوم الخدمة</label><div class="custom-select-wrapper"><select id="serviceTypeDelivery"><option value="percentage">نسبة مئوية (%)</option><option value="fixed">مبلغ ثابت</option></select></div></div>
+                </div>
+            </div>
+            
+            <!-- قسم إعدادات نقاط الولاء (تم نقله داخل الفورم) -->
+            <div class="form-container">
+                <h3>إعدادات نقاط الولاء</h3>
+                <div class="form-grid-columns">
+                    <div class="form-group">
+                        <label for="pointsEarnRate">عدد النقاط المكتسبة لكل مبلغ (مثال: 1 نقطة لكل 10 ج.م)</label>
+                        <input type="number" id="pointsEarnRate" step="0.01" min="0">
+                        <p class="help-text">أدخل المبلغ الذي يمنح نقطة واحدة (مثال: 10 إذا كانت كل 10 ج.م تساوي 1 نقطة).</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="pointsRedeemValue">قيمة النقطة الواحدة (مثال: 1 نقطة = 0.10 ج.م)</label>
+                        <input type="number" id="pointsRedeemValue" step="0.01" min="0">
+                        <p class="help-text">أدخل القيمة النقدية للنقطة الواحدة (مثال: 0.10 إذا كانت النقطة الواحدة تساوي 10 قروش).</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.2em;">حفظ الإعدادات</button>
+        </form>
+    </div>
+    

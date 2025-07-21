@@ -1,0 +1,81 @@
+    <!-- src/views/login.html -->
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+        <title>تسجيل الدخول - كاشير برو</title>
+        
+        <!-- تم تعديل هذا السطر ليشير إلى Font Awesome المحلي -->
+        <link rel="stylesheet" href="../scripts/lib/all.min.css"/> 
+        
+        <link rel="stylesheet" href="../styles/theme.css">
+        <link rel="stylesheet" href="../styles/main.css"> <!-- هذا الملف يحتوي على تعريف المؤشر -->
+        <!-- تم حذف هذا السطر لأنه لا يوجد ملف login.css خارجي -->
+        <!-- <link rel="stylesheet" href="../styles/login.css"> -->
+        <style>
+            .login-page-body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: var(--color-bg);
+            }
+            .login-container {
+                width: 100%;
+                max-width: 400px;
+                padding: 40px;
+                background-color: var(--color-surface-solid);
+                border-radius: var(--border-radius-lg);
+                box-shadow: var(--shadow-lg);
+                text-align: center;
+            }
+            .login-container .logo {
+                margin-bottom: 30px;
+                font-size: 2.5em;
+                font-weight: 700;
+                color: var(--color-primary);
+            }
+            .login-form-group {
+                margin-bottom: 20px;
+                text-align: right;
+            }
+            .login-form-group input {
+                width: 100%;
+                padding: 15px;
+                font-size: 1.1em;
+                border-radius: var(--border-radius-md);
+                background-color: var(--color-bg);
+                border: 1px solid var(--color-border);
+                color: var(--color-text);
+            }
+            .login-form-group button {
+                width: 100%;
+                padding: 15px;
+                font-size: 1.2em;
+            }
+        </style>
+    </head>
+    <body class="login-page-body">
+
+        <div class="login-container">
+            <h1 class="logo">كاشير برو</h1>
+            <form id="login-form">
+                <div class="login-form-group">
+                    <input type="text" id="username" placeholder="اسم المستخدم" required>
+                </div>
+                <div class="login-form-group">
+                    <input type="password" id="password" placeholder="كلمة المرور" required>
+                </div>
+                <div class="login-form-group">
+                    <button type="submit" class="btn btn-primary">تسجيل الدخول</button>
+                </div>
+            </form>
+        </div>
+
+        <script src="../scripts/lib/sweetalert2.all.min.js"></script>
+        <script src="../scripts/login.js"></script>
+    </body>
+    </html>
+    

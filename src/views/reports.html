@@ -1,0 +1,32 @@
+<div class="management-container">
+    <h1>التقارير التحليلية</h1>
+    <div class="form-container">
+        <h2>نظرة عامة</h2>
+        <div class="filters">
+            <button class="btn filter-btn active" data-filter="today">اليوم</button>
+            <button class="btn filter-btn" data-filter="week">هذا الأسبوع</button>
+            <button class="btn filter-btn" data-filter="month">هذا الشهر</button>
+        </div>
+        <div class="kpi-container">
+            <div class="kpi-card"><h4 >إجمالي المبيعات</h4><span id="total-revenue">0.00</span></div>
+            <div class="kpi-card"><h4 >عدد الفواتير</h4><span id="total-invoices">0</span></div>
+            <div class="kpi-card total-expenses"><h4 >إجمالي المصروفات</h4><span id="total-expenses">0.00</span></div>
+            <div class="kpi-card net-profit"><h4 >صافي الربح</h4><span id="net-profit">0.00</span></div>
+        </div>
+    </div>
+    <div class="analytics-grid">
+        <div class="table-container">
+            <h2>المنتجات الأكثر مبيعاً</h2>
+            <table id="best-sellers-table"><thead><tr><th>المنتج</th><th>الكمية المباعة</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="chart-container"><h2>تحليل ساعات الذروة</h2><canvas id="peak-hours-chart"></canvas></div>
+        <div class="table-container">
+            <h2>أداء الكاشير</h2>
+            <table id="cashier-performance-table"><thead><tr><th>الكاشير</th><th>عدد الفواتير</th><th>إجمالي المبيعات</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+    <div class="table-container" style="margin-top: 20px;">
+        <h2>قائمة المبيعات التفصيلية</h2>
+        <table id="sales-table"><thead><tr><th>#</th><th>الكاشير</th><th>العميل</th><th>الحالة</th><th>الإجمالي</th><th>الدفع</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody></tbody></table>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="management-container">
+    <h1>إدارة المنتجات</h1>
+    <!-- FIX: (Task 12) Added Import/Export buttons -->
+    <div class="page-actions">
+        <button id="import-products-btn" class="btn btn-secondary"><i class="fa-solid fa-file-import"></i> استيراد من Excel</button>
+        <button id="export-products-btn" class="btn btn-secondary"><i class="fa-solid fa-file-excel"></i> تصدير إلى Excel</button>
+    </div>
+    <div class="form-container">
+        <h2>إضافة / تعديل منتج</h2>
+        <form id="product-form">
+            <input type="hidden" id="product-id">
+            <div class="form-grid-columns">
+                <div class="form-group"><label for="name">اسم المنتج</label><input type="text" id="name" required></div>
+                <div class="form-group"><label for="price">سعر البيع</label><input type="number" id="price" step="0.01" required></div>
+                <div class="form-group"><label for="cost_price">سعر التكلفة (اختياري)</label><input type="number" id="cost_price" step="0.01"></div>
+                <div class="form-group"><label for="stock">المخزون (فارغ لغير محدود)</label><input type="number" id="stock"></div>
+                <div class="form-group"><label for="barcode">الباركود (اختياري)</label><input type="text" id="barcode"></div>
+                <div class="form-group"><label for="shortcut_key">مفتاح الاختصار (حرف واحد)</label><input type="text" id="shortcut_key" maxlength="1"></div>
+            </div>
+            <div class="form-group">
+    <label>نوع عرض المنتج</label>
+    <div class="radio-group">
+        <input type="radio" id="display-image" name="display-type" value="image" checked>
+        <label for="display-image">صورة</label>
+        <input type="radio" id="display-icon" name="display-type" value="icon">
+        <label for="display-icon">أيقونة</label>
+    </div>
+</div>
+
+<div id="image-upload-section" class="form-group">
+    <label for="image-upload-btn">صورة المنتج</label>
+    <button type="button" id="image-upload-btn" class="btn btn-secondary">اختر صورة</button>
+    <img id="image-preview" src="" alt="Product Preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
+</div>
+
+<div id="icon-selection-section" class="form-group" style="display: none; position: relative;">
+    <label for="product-icon">اسم الأيقونة (مثال: برجر، شاي، قهوة)</label> <!-- تم تعديل النص التوضيحي -->
+    <input type="text" id="product-icon" class="form-input" placeholder="اكتب اسم الأيقونة للبحث">
+    <div id="icon-suggestions" class="icon-suggestions-dropdown"></div> <!-- هذا هو الـ div الجديد -->
+    <div id="icon-preview" style="font-size: 48px; margin-top: 10px; text-align: center;">
+        <i class="fa-solid fa-question-circle"></i>
+    </div>
+    <p class="help-text">يمكنك البحث بأسماء شائعة أو اسم أيقونة Font Awesome الكامل (مثال: `fa-solid fa-burger`).</p>
+</div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">حفظ المنتج</button>
+                <button type="button" id="clear-form-btn" class="btn btn-secondary">مسح الحقول</button>
+            </div>
+        </form>
+    </div>
+    <div class="table-container">
+        <h2>قائمة المنتجات الحالية</h2>
+        <table id="products-table">
+            <thead>
+                <tr>
+                    <th>صورة</th><th>الاسم</th>
+                    <th>السعر</th><th>الاختصار</th>
+                    <th>المخزون</th><th>الباركود</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,56 @@
+<div class="management-container">
+    <h1>إدارة المصروفات</h1>
+    <div class="form-container">
+        <h2>إضافة مصروف جديد</h2>
+        <form id="expense-form">
+            <div class="form-grid-columns">
+                <div class="form-group">
+                    <label for="description">وصف المصروف</label>
+                    <input type="text" id="description" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">المبلغ</label>
+                    <input type="number" id="amount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">التصنيف (اختياري)</label>
+                    <input type="text" id="category" placeholder="مثال: فواتير، إيجار، مشتريات">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">حفظ المصروف</button>
+                <button type="button" id="clear-form-btn" class="btn btn-secondary">مسح الحقول</button>
+            </div>
+        </form>
+    </div>
+    <div class="table-container">
+        <h2>قائمة المصروفات</h2>
+        <div class="report-filters">
+            <div class="form-group">
+                <label for="date-from">من تاريخ</label>
+                <input type="date" id="date-from">
+            </div>
+            <div class="form-group">
+                <label for="date-to">إلى تاريخ</label>
+                <input type="date" id="date-to">
+            </div>
+            <button id="filter-expenses-btn" class="btn btn-primary">فلترة</button>
+            <button id="print-expenses-btn" class="btn btn-secondary">طباعة التقرير</button>
+        </div>
+        <div id="total-expenses-container">
+            <h3>إجمالي المصروفات في الفترة المحددة: <span id="total-expenses-value">0.00</span></h3>
+        </div>
+        <table id="expenses-table">
+            <thead>
+                <tr>
+                    <th>الوصف</th>
+                    <th>المبلغ</th>
+                    <th>التصنيف</th>
+                    <th>التاريخ</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
