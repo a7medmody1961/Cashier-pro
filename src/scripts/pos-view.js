@@ -1,29 +1,21 @@
 // ==================================================================================
-// الملف الثالث: pos-view.js (تم الإصلاح وإضافة الخصم اليدوي)
+// الملف الثالث: pos-view.js (تم الإصلاح)
 // المسار: src/scripts/pos-view.js
-// الشرح: تم إضافة منطق التعامل مع الخصم اليدوي وتطبيقه على الفاتورة.
+// الشرح: تم إضافة طبقة حماية للتأكد من أن المنتجات دائماً مصفوفة قبل عرضها.
 // ==================================================================================
 
 import { generateInvoiceHTML } from './invoice-template.js';
 
 let allProducts = [], invoiceItems = [], currentOrderType = 'dine-in', currentCustomerData = {}, appSettings = {};
-// متغيرات الخصم اليدوي الجديدة
-let manualDiscountAmount = 0, manualDiscountType = 'fixed', manualDiscountApplied = false;
 let productGrid, searchBar, invoiceItemsDiv, subTotalSpan, vatTotalSpan, serviceTotalSpan, deliveryRow, deliveryTotalSpan, grandTotalSpan, finalizeButton, cancelOrderBtn, orderTypeSelector, dineInCustomerForm, deliveryCustomerForm, dineInCustomerNameInput, dineInCustomerPhoneInput, customerPhoneInput, customerNameInput, customerSearchResultsDiv, addressSelectionContainer;
-// عناصر نقاط الولاء
+// عناصر نقاط الولاء الجديدة
 let loyaltyPointsSection, customerLoyaltyPointsSpan, applyLoyaltyDiscountCheckbox, loyaltyDiscountDisplay, loyaltyDiscountValueSpan;
-let loyaltyDiscountApplied = false;
-// عناصر الخصم اليدوي الجديدة
-let manualDiscountInput, manualDiscountTypeSelect, applyManualDiscountBtn, clearManualDiscountBtn, manualDiscountLabel, manualDiscountValueSpanHtml;
-
-// جديد: علم لمنع إرفاق مستمعات الأحداث بشكل متكرر
-let _eventListenersSetup = false;
-
+let loyaltyDiscountApplied = false; // حالة لتتبع ما إذا تم تطبيق خصم الولاء
 
 export function init(settings) {
     appSettings = settings;
     getDomElements();
-    setupEventListeners(); // سيتم استدعاؤها مرة واحدة فقط بفضل العلم الجديد
+    setupEventListeners();
     loadProducts();
     setOrderType('dine-in');
     window.api.onProductsUpdate(loadProducts);
@@ -57,14 +49,6 @@ function getDomElements() {
     applyLoyaltyDiscountCheckbox = document.getElementById('apply-loyalty-discount');
     loyaltyDiscountDisplay = document.getElementById('loyalty-discount-display');
     loyaltyDiscountValueSpan = document.getElementById('loyalty-discount-value');
-
-    // جلب عناصر الخصم اليدوي الجديدة
-    manualDiscountInput = document.getElementById('manual-discount-input');
-    manualDiscountTypeSelect = document.getElementById('manual-discount-type-select');
-    applyManualDiscountBtn = document.getElementById('apply-manual-discount-btn');
-    clearManualDiscountBtn = document.getElementById('clear-manual-discount-btn');
-    manualDiscountLabel = document.getElementById('manual-discount-label');
-    manualDiscountValueSpanHtml = document.getElementById('manual-discount-value');
 }
 
 async function loadProducts() {
@@ -158,40 +142,15 @@ function updateInvoice() {
     deliveryTotalSpan.textContent = formatCurrency(amounts.delivery);
     
     // تحديث وعرض خصم نقاط الولاء
-    const loyaltyDiscount = calculateLoyaltyDiscount(amounts.totalBeforeDiscounts); // استخدم الإجمالي قبل الخصم اليدوي
-    let totalAfterLoyalty = amounts.totalBeforeDiscounts; // الإجمالي قبل الخصم اليدوي
+    const loyaltyDiscount = calculateLoyaltyDiscount(amounts.total);
     if (loyaltyDiscountApplied && loyaltyDiscount > 0) {
         loyaltyDiscountDisplay.style.display = 'block';
         loyaltyDiscountValueSpan.textContent = formatCurrency(loyaltyDiscount);
-        totalAfterLoyalty -= loyaltyDiscount;
+        grandTotalSpan.textContent = formatCurrency(amounts.total - loyaltyDiscount);
     } else {
         loyaltyDiscountDisplay.style.display = 'none';
+        grandTotalSpan.textContent = formatCurrency(amounts.total);
     }
-
-    // تحديث وعرض الخصم اليدوي
-    let finalGrandTotal = totalAfterLoyalty;
-    if (manualDiscountApplied && manualDiscountAmount > 0) {
-        let discountValue = 0;
-        if (manualDiscountType === 'fixed') {
-            discountValue = manualDiscountAmount;
-        } else if (manualDiscountType === 'percentage') {
-            discountValue = totalAfterLoyalty * (manualDiscountAmount / 100);
-        }
-        // التأكد من أن الخصم لا يجعل الإجمالي سالباً
-        discountValue = Math.min(discountValue, totalAfterLoyalty); 
-
-        manualDiscountLabel.style.display = 'contents';
-        manualDiscountValueSpanHtml.style.display = 'contents';
-        manualDiscountValueSpanHtml.textContent = `- ${formatCurrency(discountValue)}`;
-        finalGrandTotal -= discountValue;
-        clearManualDiscountBtn.style.display = 'inline-block'; // إظهار زر الإزالة
-    } else {
-        manualDiscountLabel.style.display = 'none';
-        manualDiscountValueSpanHtml.style.display = 'none';
-        clearManualDiscountBtn.style.display = 'none'; // إخفاء زر الإزالة
-    }
-
-    grandTotalSpan.textContent = formatCurrency(finalGrandTotal);
     
     deliveryRow.style.display = currentOrderType === 'delivery' ? 'contents' : 'none';
     finalizeButton.disabled = invoiceItems.length === 0;
@@ -201,30 +160,11 @@ function calculateTotals() {
     const subTotal = invoiceItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let vat = 0, service = 0, delivery = 0;
     const settingsSuffix = currentOrderType === 'delivery' ? 'Delivery' : 'DineIn';
-    
-    // حساب VAT
-    if (appSettings[`vatType${settingsSuffix}`] === 'percentage') { 
-        vat = subTotal * (parseFloat(appSettings[`vatValue${settingsSuffix}`]) / 100); 
-    } else { 
-        vat = parseFloat(appSettings[`vatValue${settingsSuffix}`]) || 0; 
-    }
-    
-    // حساب الخدمة
-    if (appSettings[`serviceType${settingsSuffix}`] === 'percentage') { 
-        service = subTotal * (parseFloat(appSettings[`serviceValue${settingsSuffix}`]) / 100); 
-    } else { 
-        service = parseFloat(appSettings[`serviceValue${settingsSuffix}`]) || 0; 
-    }
-    
-    // حساب رسوم التوصيل
-    if (currentOrderType === 'delivery') { 
-        delivery = parseFloat(appSettings.deliveryFee) || 0; 
-    }
-
-    // الإجمالي قبل أي خصومات (نقاط ولاء أو خصم يدوي)
-    const totalBeforeDiscounts = subTotal + vat + service + delivery;
-
-    return { subTotal, vat, service, delivery, totalBeforeDiscounts }; // تم تغيير 'total' إلى 'totalBeforeDiscounts'
+    if (appSettings[`vatType${settingsSuffix}`] === 'percentage') { vat = subTotal * (parseFloat(appSettings[`vatValue${settingsSuffix}`]) / 100); } else { vat = parseFloat(appSettings[`vatValue${settingsSuffix}`]) || 0; }
+    if (appSettings[`serviceType${settingsSuffix}`] === 'percentage') { service = subTotal * (parseFloat(appSettings[`serviceValue${settingsSuffix}`]) / 100); } else { service = parseFloat(appSettings[`serviceValue${settingsSuffix}`]) || 0; }
+    if (currentOrderType === 'delivery') { delivery = parseFloat(appSettings.deliveryFee) || 0; }
+    const total = subTotal + vat + service + delivery;
+    return { subTotal, vat, service, delivery, total };
 }
 
 function calculateLoyaltyDiscount(currentTotal) {
@@ -255,33 +195,6 @@ async function finalizeSale() {
     const { value: paymentMethod } = await Swal.fire({ title: 'اختر طريقة الدفع', input: 'radio', inputOptions: { 'Cash': 'نقدي', 'Card': 'بطاقة' }, inputValidator: (value) => !value && 'يجب اختيار طريقة الدفع!', confirmButtonText: 'متابعة', cancelButtonText: 'إلغاء', showCancelButton: true });
     if (!paymentMethod) return;
 
-    // جديد: طلب الرقم المرجعي للمعاملة إذا كانت طريقة الدفع "بطاقة"
-    let transactionRef = null;
-    if (paymentMethod === 'Card') {
-        const { value: refNumber } = await Swal.fire({
-            title: 'الرقم المرجعي للمعاملة',
-            input: 'text',
-            inputLabel: 'الرجاء إدخال الرقم المرجعي للفيزا/البطاقة',
-            inputPlaceholder: 'الرقم المرجعي...',
-            showCancelButton: true,
-            confirmButtonText: 'متابعة',
-            cancelButtonText: 'إلغاء',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'يجب إدخال الرقم المرجعي للمعاملة!';
-                }
-            }
-        });
-
-        if (refNumber) {
-            transactionRef = refNumber.trim();
-        } else {
-            // المستخدم ألغى أو لم يدخل الرقم المرجعي
-            Swal.fire('تم الإلغاء', 'لم يتم إتمام عملية البيع لعدم إدخال الرقم المرجعي.', 'info');
-            return; // الخروج من دالة finalizeSale إذا كان الرقم المرجعي مطلوباً ولم يتم تقديمه
-        }
-    }
-
     // تحديد بيانات العميل بناءً على نوع الطلب
     let customerDataForSale = { id: null, name: null, phone: null, address: null };
 
@@ -311,64 +224,32 @@ async function finalizeSale() {
         }
     }
 
-    const amounts = calculateTotals(); // إعادة حساب الإجماليات
-    let totalAmountAfterLoyaltyDiscount = amounts.totalBeforeDiscounts;
+    const amounts = calculateTotals(); // إعادة حساب الإجماليات قبل إتمام البيع
+    let totalAmountAfterDiscount = amounts.total;
     let pointsUsed = 0;
     let loyaltyDiscountAmount = 0;
 
-    // تطبيق خصم نقاط الولاء
     if (loyaltyDiscountApplied) {
-        loyaltyDiscountAmount = calculateLoyaltyDiscount(amounts.totalBeforeDiscounts);
-        totalAmountAfterLoyaltyDiscount -= loyaltyDiscountAmount;
+        loyaltyDiscountAmount = calculateLoyaltyDiscount(amounts.total);
+        totalAmountAfterDiscount = amounts.total - loyaltyDiscountAmount;
         
+        // حساب عدد النقاط التي تم استخدامها بناءً على الخصم
         const pointsRedeemValue = parseFloat(appSettings.pointsRedeemValue) || 0;
         if (pointsRedeemValue > 0) {
             pointsUsed = Math.round(loyaltyDiscountAmount / pointsRedeemValue);
         }
     }
 
-    // تطبيق الخصم اليدوي
-    let finalTotalAmount = totalAmountAfterLoyaltyDiscount;
-    let manualDiscountValueToSave = 0;
-    let manualDiscountTypeToSave = null;
-
-    if (manualDiscountApplied && manualDiscountAmount > 0) {
-        if (manualDiscountType === 'fixed') {
-            manualDiscountValueToSave = manualDiscountAmount;
-        } else if (manualDiscountType === 'percentage') {
-            manualDiscountValueToSave = totalAmountAfterLoyaltyDiscount * (manualDiscountAmount / 100);
-        }
-        manualDiscountValueToSave = Math.min(manualDiscountValueToSave, totalAmountAfterLoyaltyDiscount); // التأكد من أن الخصم لا يتجاوز الإجمالي
-
-        finalTotalAmount -= manualDiscountValueToSave;
-        manualDiscountTypeToSave = manualDiscountType; // حفظ نوع الخصم أيضاً
-    }
-
-    // جديد: حساب نقاط الولاء المكتسبة لهذه الفاتورة
-    let pointsEarnedForThisSale = 0;
-    const pointsEarnRate = parseFloat(appSettings.pointsEarnRate) || 0;
-    if (pointsEarnRate > 0) {
-        // تم التعديل: حساب النقاط المكتسبة بقسمة المبلغ على معدل الاكتساب
-        pointsEarnedForThisSale = Math.floor(finalTotalAmount / pointsEarnRate); 
-    }
-    
     const saleData = {
         type: currentOrderType,
         items: invoiceItems,
-        amounts: { 
-            ...amounts, 
-            total: finalTotalAmount, // الإجمالي النهائي بعد جميع الخصومات
-            loyaltyDiscount: loyaltyDiscountAmount, 
-            manualDiscountAmount: manualDiscountValueToSave, // قيمة الخصم اليدوي
-            manualDiscountType: manualDiscountTypeToSave // نوع الخصم اليدوي
-        }, 
+        amounts: { ...amounts, total: totalAmountAfterDiscount, loyaltyDiscount: loyaltyDiscountAmount }, // إرسال الإجمالي بعد الخصم وقيمة الخصم
         paymentMethod,
         userId: currentUser.id,
         shiftId: activeShift.id,
         customer: customerDataForSale,
-        transactionRef: transactionRef, // <<< تمت إضافة هذا السطر
-        pointsUsed: pointsUsed, // إرسال عدد النقاط المستخدمة
-        pointsEarned: pointsEarnedForThisSale // <<< تمت إضافة هذا السطر
+        transactionRef: null,
+        pointsUsed: pointsUsed // إرسال عدد النقاط المستخدمة
     };
     
     try {
@@ -376,15 +257,8 @@ async function finalizeSale() {
         if (result.success) {
             window.api.playSound('sale-complete');
             Swal.fire('تم!', 'اكتملت عملية البيع بنجاح.', 'success');
-            // تمرير loyaltyDiscountAmount و manualDiscountValueToSave و pointsEarnedForThisSale إلى generateInvoiceHTML
-            const invoiceHtml = generateInvoiceHTML(
-                result.saleDetails, 
-                result.saleItems, 
-                appSettings, 
-                result.saleDetails.loyalty_discount_amount, 
-                result.saleDetails.manual_discount_amount,
-                result.saleDetails.loyalty_points // assuming saleDetails will now include loyalty_points from DB
-            );
+            // تمرير loyaltyDiscountAmount إلى generateInvoiceHTML
+            const invoiceHtml = generateInvoiceHTML(result.saleDetails, result.saleItems, appSettings, loyaltyDiscountAmount);
             showPreviewModal(`فاتورة رقم ${result.saleId}`, invoiceHtml);
             clearInvoice();
         } else {
@@ -415,16 +289,6 @@ function clearInvoice() {
     loyaltyDiscountApplied = false;
     loyaltyDiscountDisplay.style.display = 'none';
 
-    // إعادة تعيين حالة الخصم اليدوي
-    manualDiscountAmount = 0;
-    manualDiscountType = 'fixed';
-    manualDiscountApplied = false;
-    manualDiscountInput.value = '';
-    manualDiscountTypeSelect.value = 'fixed';
-    manualDiscountLabel.style.display = 'none';
-    manualDiscountValueSpanHtml.style.display = 'none';
-    clearManualDiscountBtn.style.display = 'none';
-
     updateInvoice();
 }
 
@@ -452,9 +316,6 @@ function updateItemQuantityFromInput(inputElement) {
 }
 
 function setupEventListeners() {
-    // جديد: إذا تم إعداد مستمعات الأحداث بالفعل، فلا تقم بإعدادها مرة أخرى
-    if (_eventListenersSetup) return;
-
     searchBar.addEventListener('input', () => {
         const searchTerm = searchBar.value.toLowerCase();
         const filtered = allProducts.filter(p =>
@@ -475,8 +336,8 @@ function setupEventListeners() {
             const action = target.dataset.action;
             const item = invoiceItems.find(i => i.id === id);
             if (item) {
-                if (action === 'increase') item.quantity++; 
-                if (action === 'decrease') item.quantity--; 
+                if (action === 'increase') item.quantity++;
+                if (action === 'decrease') item.quantity--;
                 if (item.quantity <= 0) invoiceItems = invoiceItems.filter(i => i.id !== id);
                 updateInvoice();
             }
@@ -488,27 +349,6 @@ function setupEventListeners() {
             if (button.id === 'cancel-order-btn') clearInvoice();
             if (button.id === 'finalize-button') finalizeSale();
             if (button.closest('#order-type-selector')) setOrderType(button.dataset.type);
-
-            // مستمعات الخصم اليدوي
-            if (button.id === 'apply-manual-discount-btn') {
-                const discountValue = parseFloat(manualDiscountInput.value);
-                if (isNaN(discountValue) || discountValue < 0) {
-                    Swal.fire('قيمة غير صالحة', 'الرجاء إدخال قيمة خصم صحيحة.', 'warning');
-                    return;
-                }
-                manualDiscountAmount = discountValue;
-                manualDiscountType = manualDiscountTypeSelect.value;
-                manualDiscountApplied = true;
-                updateInvoice();
-            }
-            if (button.id === 'clear-manual-discount-btn') {
-                manualDiscountAmount = 0;
-                manualDiscountType = 'fixed'; // إعادة تعيين للنوع الافتراضي
-                manualDiscountApplied = false;
-                manualDiscountInput.value = '';
-                manualDiscountTypeSelect.value = 'fixed';
-                updateInvoice();
-            }
         }
         
         const searchResultItem = target.closest('.customer-search-result');
@@ -542,116 +382,69 @@ function setupEventListeners() {
         loyaltyDiscountApplied = applyLoyaltyDiscountCheckbox.checked;
         updateInvoice(); // إعادة حساب الإجمالي لتطبيق/إزالة الخصم
     });
-
-    // مستمعات لحقل إدخال الخصم وتحديد النوع لتحديث الفاتورة عند التغيير
-    manualDiscountInput.addEventListener('input', updateInvoice);
-    manualDiscountTypeSelect.addEventListener('change', updateInvoice);
-
-    // جديد: تعيين العلم بعد إعداد مستمعات الأحداث بنجاح
-    _eventListenersSetup = true;
 }
 
 // دالة موحدة للتعامل مع إدخال رقم هاتف العميل
 async function handleCustomerPhoneInput(e) {
-    const phoneInput = e.target;
+    const phoneInput = e.target; // العنصر الذي قام بتشغيل الحدث (dineInCustomerPhoneInput أو customerPhoneInput)
     const phoneQuery = phoneInput.value.trim();
 
-    // مهم: إظهار div النتائج مبكراً، وسيتم إخفاؤه لاحقاً إذا لم تكن هناك نتائج
-    customerSearchResultsDiv.style.display = 'block'; 
-    customerSearchResultsDiv.innerHTML = '<div class="loader-sm"></div>'; // عرض مؤشر تحميل اختياري
-
-
-    // السيناريو 1: حقل الهاتف فارغ تمامًا. هذا يعني إلغاء تحديد العميل.
-    if (phoneQuery === '') {
-        if (Object.keys(currentCustomerData).length > 0) {
-            currentCustomerData = {};
-            dineInCustomerNameInput.value = '';
-            dineInCustomerPhoneInput.value = '';
-            customerNameInput.value = '';
-            customerPhoneInput.value = '';
-            loyaltyPointsSection.style.display = 'none';
-            applyLoyaltyDiscountCheckbox.checked = false;
-            applyLoyaltyDiscountCheckbox.disabled = true;
-            loyaltyDiscountApplied = false;
-            updateInvoice();
-        }
-        customerSearchResultsDiv.innerHTML = ''; // مسح النتائج عند مسح البحث
-        customerSearchResultsDiv.style.display = 'none'; // إخفاء عند مسح البحث
-        return;
-    }
-
-    // السيناريو 2: إدخال الهاتف قصير جدًا للبحث (مثل 1 أو 2 رقم).
-    // لا يتم إجراء بحث أو مسح قسري هنا.
+    // عند مسح حقل الهاتف أو إذا كان أقل من 3 أحرف
     if (phoneQuery.length < 3) {
-        if (Object.keys(currentCustomerData).length > 0 && !currentCustomerData.phone.startsWith(phoneQuery)) {
-            currentCustomerData = {};
-            dineInCustomerNameInput.value = '';
-            customerNameInput.value = '';
-            loyaltyPointsSection.style.display = 'none';
-            applyLoyaltyDiscountCheckbox.checked = false;
-            applyLoyaltyDiscountCheckbox.disabled = true;
-            loyaltyDiscountApplied = false;
-            updateInvoice();
-        }
-        customerSearchResultsDiv.innerHTML = ''; // مسح النتائج
-        customerSearchResultsDiv.style.display = 'none'; // إخفاء عند الإدخال القصير
-        return;
-    }
-
-    // السيناريو 3: إدخال الهاتف 3 أحرف أو أكثر، قم بإجراء البحث.
-    try {
-        const results = await window.api.searchCustomers(phoneQuery);
-        if (results.length > 0) {
-            renderCustomerSearchResults(results); // هذه الدالة ستجعل العرض block تلقائياً
-            // تمت إزالة التحديد التلقائي هنا للسماح للمستخدم بالاختيار من القائمة
-            // إذا كان هناك عميل محدد مسبقًا ولكن لا يتطابق مع الاستعلام الحالي، قم بمسح بياناته
-            if (Object.keys(currentCustomerData).length > 0 && currentCustomerData.phone !== phoneQuery && !results.some(c => c.id === currentCustomerData.id)) {
-                currentCustomerData = {};
-                dineInCustomerNameInput.value = '';
-                customerNameInput.value = '';
-                loyaltyPointsSection.style.display = 'none';
-                applyLoyaltyDiscountCheckbox.checked = false;
-                applyLoyaltyDiscountCheckbox.disabled = true;
-                loyaltyDiscountApplied = false;
-                updateInvoice();
-            }
-        } else {
-            // لم يتم العثور على نتائج بحث للاستعلام الحالي (3 أحرف أو أكثر).
-            // مهم: مسح النتائج وإخفاء الـ div
-            customerSearchResultsDiv.innerHTML = '';
-            customerSearchResultsDiv.style.display = 'none';
-
-            if (Object.keys(currentCustomerData).length > 0 && currentCustomerData.phone !== phoneQuery) {
-                currentCustomerData = {};
-                dineInCustomerNameInput.value = '';
-                customerNameInput.value = '';
-                loyaltyPointsSection.style.display = 'none';
-                applyLoyaltyDiscountCheckbox.checked = false;
-                applyLoyaltyDiscountCheckbox.disabled = true;
-                loyaltyDiscountApplied = false;
-                updateInvoice();
-            } else if (Object.keys(currentCustomerData).length === 0) {
-                loyaltyPointsSection.style.display = 'none';
-                applyLoyaltyDiscountCheckbox.checked = false;
-                applyLoyaltyDiscountCheckbox.disabled = true;
-                loyaltyDiscountApplied = false;
-                updateInvoice();
-            }
-        }
-    } catch (error) {
-        console.error('Customer search failed:', error);
-        // مهم: مسح النتائج وإخفاء الـ div عند الخطأ
-        customerSearchResultsDiv.innerHTML = '';
         customerSearchResultsDiv.style.display = 'none';
-
+        // مسح بيانات العميل الحالية ونقاط الولاء
         currentCustomerData = {};
-        dineInCustomerNameInput.value = '';
-        customerNameInput.value = '';
+        // مسح حقول الاسم والهاتف الأخرى فقط
+        if (phoneInput.id === 'customer-phone') { // إذا كان حقل هاتف التوصيل
+            customerNameInput.value = '';
+        } else { // إذا كان حقل هاتف الصالة
+            dineInCustomerNameInput.value = '';
+        }
+        // مسح حقول الهاتف الأخرى
+        if (phoneInput.id === 'customer-phone') {
+            dineInCustomerPhoneInput.value = '';
+        } else {
+            customerPhoneInput.value = '';
+        }
+
         loyaltyPointsSection.style.display = 'none';
         applyLoyaltyDiscountCheckbox.checked = false;
         applyLoyaltyDiscountCheckbox.disabled = true;
         loyaltyDiscountApplied = false;
         updateInvoice();
+        return;
+    }
+
+    try {
+        const results = await window.api.searchCustomers(phoneQuery);
+        if (results.length > 0) {
+            renderCustomerSearchResults(results);
+            // لا يتم هنا selectCustomer تلقائياً، بل تظهر النتائج للمستخدم للاختيار
+        } else {
+            customerSearchResultsDiv.style.display = 'none';
+            // إذا لم يتم العثور على عميل، قم بمسح بيانات العميل ونقاط الولاء
+            currentCustomerData = {};
+            // مسح حقول الاسم والهاتف الأخرى
+            if (phoneInput.id === 'customer-phone') {
+                customerNameInput.value = '';
+            } else {
+                dineInCustomerNameInput.value = '';
+            }
+            if (phoneInput.id === 'customer-phone') {
+                dineInCustomerPhoneInput.value = '';
+            } else {
+                customerPhoneInput.value = '';
+            }
+
+            loyaltyPointsSection.style.display = 'none';
+            applyLoyaltyDiscountCheckbox.checked = false;
+            applyLoyaltyDiscountCheckbox.disabled = true;
+            loyaltyDiscountApplied = false;
+            updateInvoice();
+        }
+    } catch (error) {
+        console.error('Customer search failed:', error);
+        customerSearchResultsDiv.style.display = 'none';
     }
 }
 

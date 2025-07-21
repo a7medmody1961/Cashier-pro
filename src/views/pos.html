@@ -1,13 +1,21 @@
+<!--
+  File: src/views/pos.html
+-->
 <div class="pos-layout">
-    <div class="products-section-container">
+    <!-- قسم عرض المنتجات -->
+     <div class="products-section-container">
     <div class="content-header">
-        <div class="search-and-quantity-controls"> <input type="text" id="search-bar" placeholder="بحث عن منتج بالاسم أو الباركود...">
-            </div>
+        <div class="search-and-quantity-controls"> <!-- div جديد لتجميع العناصر -->
+            <input type="text" id="search-bar" placeholder="بحث عن منتج بالاسم أو الباركود...">
+            <!-- تم حذف مربع الكمية العلوي هنا -->
+        </div>
     </div>
     <div id="product-grid" class="product-grid">
-        </div>
+        <!-- Product cards will be loaded here -->
+    </div>
 </div>
 
+    <!-- قسم الفاتورة -->
     <aside class="invoice-section-container">
         <div class="invoice-header">
             <div id="order-type-selector" class="order-type-selector">
@@ -51,13 +59,15 @@
                 <span>الضريبة</span><span id="vat-total">0.00</span>
                 <span>خدمة</span><span id="service-total">0.00</span>
                 <span id="delivery-label" style="display: none;">توصيل</span><span id="delivery-total" style="display: none;">0.00</span>
-                <span id="manual-discount-label" style="display: none;">الخصم اليدوي</span><span id="manual-discount-value" style="display: none;">0.00</span>
             </div>
             <div class="invoice-summary">
                 <span>الإجمالي</span>
                 <span class="total-price" id="grand-total">0.00</span>
             </div>
-            
+            <div class="action-buttons">
+                <button id="cancel-order-btn" class="btn btn-danger">إلغاء</button>
+                <button id="finalize-button" class="btn btn-primary" disabled>إتمام الدفع</button>
+            </div>
             <div id="loyalty-points-section" class="customer-details-form" style="display: none;">
                 <div class="form-group">
                     <label>نقاط الولاء المتاحة:</label>
@@ -71,23 +81,6 @@
                     <label>قيمة الخصم:</label>
                     <span id="loyalty-discount-value" class="loyalty-points-display">0.00</span>
                 </div>
-            </div>
-
-            <div id="manual-discount-section" class="manual-discount-form" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label for="manual-discount-input">الخصم اليدوي:</label>
-                    <input type="number" id="manual-discount-input" placeholder="القيمة" min="0" step="any">
-                    <select id="manual-discount-type-select">
-                        <option value="fixed">مبلغ ثابت</option>
-                        <option value="percentage">نسبة مئوية (%)</option>
-                    </select>
-                    <button id="apply-manual-discount-btn" class="btn btn-secondary">تطبيق</button>
-                    <button id="clear-manual-discount-btn" class="btn btn-danger" style="display:none;">إزالة</button>
-                </div>
-            </div>
-            <div class="action-buttons" style="margin-top: 15px;">
-                <button id="cancel-order-btn" class="btn btn-danger">إلغاء</button>
-                <button id="finalize-button" class="btn btn-primary" disabled>إتمام الدفع</button>
             </div>
         </footer>
     </aside>
