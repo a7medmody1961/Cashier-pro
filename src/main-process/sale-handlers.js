@@ -6,8 +6,9 @@ const db = require('../../database');
 
 module.exports = (ipcMain, getMainWindow) => {
         ipcMain.handle('sales:finalize', (event, saleData) => {
-            // إضافة manualDiscountAmount و manualDiscountType إلى البيانات المستلمة
-            const { type, items, amounts, paymentMethod, userId, shiftId, customer, transactionRef, pointsUsed } = saleData; 
+            // إضافة manualDiscountAmount و manualDiscountType و pointsEarned إلى البيانات المستلمة
+            // تم إضافة pointsEarned إلى destructuring
+            const { type, items, amounts, paymentMethod, userId, shiftId, customer, transactionRef, pointsUsed, pointsEarned } = saleData; 
             const { manualDiscountAmount, manualDiscountType } = amounts; // استخراج الخصم اليدوي من amounts
             
             try {
@@ -47,10 +48,10 @@ module.exports = (ipcMain, getMainWindow) => {
                     }
 
                     const deliveryAddress = (type === 'delivery' && customer) ? customer.address : null;
-                    // تحديث saleSql لتضمين حقول الخصم اليدوي
-                    const saleSql = `INSERT INTO sales (user_id, shift_id, customer_id, order_type, total_amount, sub_total, vat_amount, service_amount, delivery_fee_amount, payment_method, transaction_ref, delivery_address, manual_discount_amount, manual_discount_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                    // تحديث saleParams لتضمين قيم الخصم اليدوي
-                    const saleParams = [userId, shiftId, customerId, type, amounts.total, amounts.subTotal, amounts.vat, amounts.service, amounts.delivery, paymentMethod, transactionRef, deliveryAddress, manualDiscountAmount, manualDiscountType];
+                    // تحديث saleSql لتضمين حقول الخصم اليدوي ونقاط الولاء المكتسبة
+                    const saleSql = `INSERT INTO sales (user_id, shift_id, customer_id, order_type, total_amount, sub_total, vat_amount, service_amount, delivery_fee_amount, payment_method, transaction_ref, delivery_address, manual_discount_amount, manual_discount_type, loyalty_points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    // تحديث saleParams لتضمين قيم الخصم اليدوي ونقاط الولاء المكتسبة
+                    const saleParams = [userId, shiftId, customerId, type, amounts.total, amounts.subTotal, amounts.vat, amounts.service, amounts.delivery, paymentMethod, transactionRef, deliveryAddress, manualDiscountAmount, manualDiscountType, pointsEarned]; // <<< تم إضافة pointsEarned هنا
                     
                     const saleResult = db.prepare(saleSql).run(saleParams);
                     const saleId = saleResult.lastInsertRowid;
@@ -66,39 +67,27 @@ module.exports = (ipcMain, getMainWindow) => {
                         // Update order count and total spent for associated customer
                         db.prepare("UPDATE customers SET order_count = order_count + 1, total_spent = total_spent + ? WHERE id = ?").run(amounts.total, customerId);
 
-                        // Calculate and update loyalty points
-                        const settings = db.prepare("SELECT key, value FROM settings WHERE key IN ('pointsEarnRate', 'pointsRedeemValue')").all();
-                        const pointsEarnRate = parseFloat(settings.find(s => s.key === 'pointsEarnRate')?.value) || 0;
-                        const pointsRedeemValue = parseFloat(settings.find(s => s.key === 'pointsRedeemValue')?.value) || 0;
-
+                        // تحديث نقاط الولاء (باستخدام القيم المرسلة من pos-view.js)
+                        // لا حاجة لإعادة حساب pointsEarnedThisSale هنا
                         let currentLoyaltyPoints = existingCustomer ? existingCustomer.loyalty_points : 0;
                         let currentTotalEarnedLoyaltyPoints = existingCustomer ? existingCustomer.total_earned_loyalty_points : 0;
                         let currentTotalRedeemedLoyaltyPoints = existingCustomer ? existingCustomer.total_redeemed_loyalty_points : 0;
-
-
-                        let newLoyaltyPoints = currentLoyaltyPoints;
-                        let pointsEarnedThisSale = 0;
-                        let pointsRedeemedThisSale = 0;
-
-
-                        if (pointsUsed && pointsUsed > 0) {
-                            pointsRedeemedThisSale = pointsUsed;
-                            newLoyaltyPoints = Math.max(0, newLoyaltyPoints - pointsRedeemedThisSale);
-                        }
-                        if (pointsEarnRate > 0) {
-                            pointsEarnedThisSale = Math.floor(amounts.total / pointsEarnRate);
-                            newLoyaltyPoints += pointsEarnedThisSale;
-                        }
                         
-                        // تحديث الحقول الجديدة (النقاط المكتسبة والمسددة بشكل تراكمي)
-                        currentTotalEarnedLoyaltyPoints += pointsEarnedThisSale;
-                        currentTotalRedeemedLoyaltyPoints += pointsRedeemedThisSale;
+                        // خصم النقاط المستخدمة
+                        if (pointsUsed && pointsUsed > 0) {
+                            currentLoyaltyPoints = Math.max(0, currentLoyaltyPoints - pointsUsed);
+                            currentTotalRedeemedLoyaltyPoints += pointsUsed; // زيادة إجمالي النقاط المستردة
+                        }
+                        // إضافة النقاط المكتسبة
+                        currentLoyaltyPoints += pointsEarned;
+                        currentTotalEarnedLoyaltyPoints += pointsEarned; // زيادة إجمالي النقاط المكتسبة
 
                         db.prepare("UPDATE customers SET loyalty_points = ?, total_earned_loyalty_points = ?, total_redeemed_loyalty_points = ? WHERE id = ?")
-                          .run(newLoyaltyPoints, currentTotalEarnedLoyaltyPoints, currentTotalRedeemedLoyaltyPoints, customerId);
+                          .run(currentLoyaltyPoints, currentTotalEarnedLoyaltyPoints, currentTotalRedeemedLoyaltyPoints, customerId);
                     }
                     
-                    getMainWindow()?.webContents.send('products-updated');
+                    // تم التعديل: إرسال إشارة sales-updated بدلاً من products-updated
+                    getMainWindow()?.webContents.send('sales-updated'); 
                     
                     // بناء saleDetails للفاتورة:
                     // نستخدم البيانات من saleData.customer مباشرة لضمان ظهور الاسم والهاتف والعنوان
@@ -122,7 +111,8 @@ module.exports = (ipcMain, getMainWindow) => {
                         delivery_address: deliveryAddress, // العنوان يتم تحديده بالفعل في deliveryAddress
                         // إضافة بيانات الخصم اليدوي إلى saleDetails
                         manual_discount_amount: manualDiscountAmount,
-                        manual_discount_type: manualDiscountType
+                        manual_discount_type: manualDiscountType,
+                        loyalty_points: pointsEarned // <<< تأكد من تمرير النقاط المكتسبة للفاتورة إلى saleDetails
                     };
                     
 
@@ -156,9 +146,11 @@ module.exports = (ipcMain, getMainWindow) => {
 
                 const originalItems = db.prepare("SELECT * FROM sale_items WHERE sale_id = ?").all(saleId);
                 
-                const refundSaleSql = `INSERT INTO sales (user_id, shift_id, customer_id, order_type, total_amount, sub_total, vat_amount, service_amount, delivery_fee_amount, payment_method, status, original_sale_id, refunded_by_user_id, refunded_at, manual_discount_amount, manual_discount_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'refunded', ?, ?, datetime('now', 'localtime'), ?, ?)`;
-                // Ensure to pass original manual discount values to refund sale as well
-                const refundResult = db.prepare(refundSaleSql).run(originalSale.user_id, originalSale.shift_id, originalSale.customer_id, originalSale.order_type, -originalSale.total_amount, -originalSale.sub_total, -originalSale.vat_amount, -originalSale.service_amount, -originalSale.delivery_fee_amount, originalSale.payment_method, saleId, userId, originalSale.manual_discount_amount, originalSale.manual_discount_type);
+                // تم التعديل: إضافة loyalty_points للـ refund sale
+                const refundSaleSql = `INSERT INTO sales (user_id, shift_id, customer_id, order_type, total_amount, sub_total, vat_amount, service_amount, delivery_fee_amount, payment_method, status, original_sale_id, refunded_by_user_id, refunded_at, manual_discount_amount, manual_discount_type, loyalty_points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'refunded', ?, ?, datetime('now', 'localtime'), ?, ?, ?)`; 
+                // Ensure to pass original manual discount values and loyalty points to refund sale as well
+                // تم التعديل: تمرير -originalSale.loyalty_points
+                const refundResult = db.prepare(refundSaleSql).run(originalSale.user_id, originalSale.shift_id, originalSale.customer_id, originalSale.order_type, -originalSale.total_amount, -originalSale.sub_total, -originalSale.vat_amount, -originalSale.service_amount, -originalSale.delivery_fee_amount, originalSale.payment_method, saleId, userId, originalSale.manual_discount_amount, originalSale.manual_discount_type, -originalSale.loyalty_points); 
                 const refundSaleId = refundResult.lastInsertRowid;
 
                 const itemStmt = db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price_per_item) VALUES (?, ?, ?, ?, ?)");
@@ -175,12 +167,9 @@ module.exports = (ipcMain, getMainWindow) => {
                     db.prepare("UPDATE customers SET total_spent = total_spent - ? WHERE id = ?").run(originalSale.total_amount, originalSale.customer_id);
 
                     // تحديث نقاط الولاء عند الإرجاع (عكس عملية الكسب)
-                    const settings = db.prepare("SELECT key, value FROM settings WHERE key IN ('pointsEarnRate', 'pointsRedeemValue')").all();
-                    const pointsEarnRate = parseFloat(settings.find(s => s.key === 'pointsEarnRate')?.value) || 0;
-                    
-                    if (pointsEarnRate > 0) {
-                        const pointsLost = Math.floor(originalSale.total_amount / pointsEarnRate);
-                        db.prepare("UPDATE customers SET loyalty_points = loyalty_points - ?, total_earned_loyalty_points = total_earned_loyalty_points - ? WHERE id = ?").run(pointsLost, pointsLost, originalSale.customer_id);
+                    // إذا كان originalSale.loyalty_points يمثل النقاط المكتسبة، فقم بخصمها
+                    if (originalSale.loyalty_points > 0) { 
+                        db.prepare("UPDATE customers SET loyalty_points = loyalty_points - ?, total_earned_loyalty_points = total_earned_loyalty_points - ? WHERE id = ?").run(originalSale.loyalty_points, originalSale.loyalty_points, originalSale.customer_id);
                     }
                 }
 
@@ -197,7 +186,7 @@ module.exports = (ipcMain, getMainWindow) => {
 
     ipcMain.handle('sales:get-details', (event, saleId) => {
         try {
-            // تحديث استعلام جلب تفاصيل البيع لجلب حقول الخصم اليدوي
+            // تحديث استعلام جلب تفاصيل البيع لجلب حقول الخصم اليدوي ونقاط الولاء
             const saleDetails = db.prepare(`
                 SELECT s.*, u.username, c.name as customer_name, c.phone as customer_phone, ru.username as refunded_by_username
                 FROM sales s 

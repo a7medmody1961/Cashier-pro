@@ -174,12 +174,23 @@ export function init(appSettings) {
 
         if (filter === 'week') {
             const dayOfWeek = start.getDay();
-            start.setDate(start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+            // تعديل الأحد ليكون اليوم الأخير في الأسبوع وليس الأول
+            start.setDate(start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); 
         } else if (filter === 'month') {
             start.setDate(1);
         }
 
-        const toSQLiteString = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
+        // تم التعديل: دالة لإنشاء سلسلة نصية للتاريخ والوقت بالتوقيت المحلي لـ SQLite
+        const toSQLiteString = (date) => {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        };
+
         return { start: toSQLiteString(start), end: toSQLiteString(end) };
     }
 
@@ -187,5 +198,9 @@ export function init(appSettings) {
         return new Intl.NumberFormat('ar-EG', { style: 'currency', currency: 'EGP' }).format(amount || 0);
     }
 
+    // جديد: الاستماع لإشارة تحديث المبيعات عند تهيئة الصفحة
+    window.api.onSalesUpdate(loadAllReports);
+
+    // تحميل البيانات الأولية عند تهيئة الصفحة
     loadAllReports('today');
 }

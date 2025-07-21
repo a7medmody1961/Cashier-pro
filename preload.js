@@ -52,6 +52,9 @@ contextBridge.exposeInMainWorld('api', {
   processRefund: (refundData) => ipcRenderer.invoke('sales:process-refund', refundData),
   // (Task 13) New handler to get full details for a single sale
   getSaleDetails: (saleId) => ipcRenderer.invoke('sales:get-details', saleId),
+   // جديد: إضافة الدالة onSalesUpdate للسماح لـ reports.js بالاستماع لتحديثات المبيعات
+  onSalesUpdate: (callback) => ipcRenderer.on('sales-updated', (event) => callback()), // <<< أضف هذا السطر
+  
 
   // --- Reports ---
   getAnalytics: (dateRange) => ipcRenderer.invoke('reports:get-analytics'),
