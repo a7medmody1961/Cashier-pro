@@ -1,5 +1,6 @@
 <!--
   File: src/views/pos.html
+  Description: Added a note icon placeholder for each invoice item.
 -->
 <div class="pos-layout">
     <!-- قسم عرض المنتجات -->
@@ -47,7 +48,7 @@
                 <input type="text" id="customer-address" required>
             </div>
         </div>
-        <div id="customer-search-results"></div> 
+        <div id="customer-search-results"></div>
     </div>
         </div>
         <div id="invoice-items" class="invoice-items-list">
@@ -84,4 +85,14 @@
             </div>
         </footer>
     </aside>
+</div>
+
+<!-- Modal for adding notes -->
+<div id="note-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>إضافة ملاحظة</h2>
+        <textarea id="note-input" placeholder="اكتب ملاحظتك هنا..."></textarea>
+        <button id="save-note-btn" class="btn btn-primary">حفظ الملاحظة</button>
+    </div>
 </div>

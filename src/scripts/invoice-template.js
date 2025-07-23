@@ -1,7 +1,7 @@
 // ==================================================================================
-// الملف: invoice-template.js (تم التعديل لإضافة الخصم اليدوي للفاتورة)
+// الملف: invoice-template.js
 // المسار: src/scripts/invoice-template.js
-// الشرح: تم تعديل الدالة لتعرض الخصم اليدوي في قالب الفاتورة.
+// الشرح: تم تعديل الدالة لتعرض الخصم اليدوي والملاحظات على الأصناف في قالب الفاتورة.
 // ==================================================================================
 
 export function generateInvoiceHTML(saleDetails, saleItems, appSettings, loyaltyDiscountAmount = 0, manualDiscountAmount = 0) {
@@ -74,7 +74,10 @@ export function generateInvoiceHTML(saleDetails, saleItems, appSettings, loyalty
                     <tbody>
                         ${saleItems.map(item => `
                             <tr>
-                                <td>${item.product_name}</td>
+                                <td>
+                                    ${item.product_name}
+                                    ${item.note ? `<br><small>(${item.note})</small>` : ''}
+                                </td>
                                 <td>${item.quantity}</td>
                                 <td>${formatCurrency(item.price_per_item)}</td>
                                 <td>${formatCurrency(item.quantity * item.price_per_item)}</td>

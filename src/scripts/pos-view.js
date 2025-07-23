@@ -1,7 +1,7 @@
 // ==================================================================================
-// الملف الثالث: pos-view.js (تم الإصلاح)
+// الملف: pos-view.js
 // المسار: src/scripts/pos-view.js
-// الشرح: تم إضافة طبقة حماية للتأكد من أن المنتجات دائماً مصفوفة قبل عرضها.
+// الشرح: تم تعديل ميزة الملاحظات على الأصناف في الفاتورة لتدعم إضافة الأصناف كمفردة في حال وجود ملاحظات مختلفة.
 // ==================================================================================
 
 import { generateInvoiceHTML } from './invoice-template.js';
@@ -11,6 +11,9 @@ let productGrid, searchBar, invoiceItemsDiv, subTotalSpan, vatTotalSpan, service
 // عناصر نقاط الولاء الجديدة
 let loyaltyPointsSection, customerLoyaltyPointsSpan, applyLoyaltyDiscountCheckbox, loyaltyDiscountDisplay, loyaltyDiscountValueSpan;
 let loyaltyDiscountApplied = false; // حالة لتتبع ما إذا تم تطبيق خصم الولاء
+
+// عناصر الملاحظات الجديدة
+let noteModal, noteInput, saveNoteBtn, currentNoteProductId = null, currentNoteItemIndex = -1; // إضافة currentNoteItemIndex لتحديد العنصر بالضبط
 
 export function init(settings) {
     appSettings = settings;
@@ -42,13 +45,18 @@ function getDomElements() {
     customerNameInput = document.getElementById('customer-name');
     customerSearchResultsDiv = document.getElementById('customer-search-results');
     addressSelectionContainer = document.getElementById('address-selection-container');
-    
+
     // جلب عناصر نقاط الولاء
     loyaltyPointsSection = document.getElementById('loyalty-points-section');
     customerLoyaltyPointsSpan = document.getElementById('customer-loyalty-points');
     applyLoyaltyDiscountCheckbox = document.getElementById('apply-loyalty-discount');
     loyaltyDiscountDisplay = document.getElementById('loyalty-discount-display');
     loyaltyDiscountValueSpan = document.getElementById('loyalty-discount-value');
+
+    // جلب عناصر الملاحظات
+    noteModal = document.getElementById('note-modal');
+    noteInput = document.getElementById('note-input');
+    saveNoteBtn = document.getElementById('save-note-btn');
 }
 
 async function loadProducts() {
@@ -108,11 +116,22 @@ function addProductToInvoice(productId) {
     const quantityToAdd = 1;
 
     window.api.playSound('add-to-cart');
-    const existingItem = invoiceItems.find(item => item.id === productId);
+
+    // البحث عن صنف موجود بنفس الـ ID ونفس الملاحظة (أو كلاهما بدون ملاحظة)
+    const existingItem = invoiceItems.find(item => item.id === productId && item.note === ''); // فقط إذا لم تكن هناك ملاحظة
+    const existingItemWithNote = invoiceItems.find(item => item.id === productId && item.note !== ''); // للتحقق من وجود ملاحظة بالفعل
+
     if (existingItem) {
+        // إذا وجد صنف بنفس الـ ID وبدون ملاحظة، قم بزيادة الكمية
         existingItem.quantity += quantityToAdd;
-    } else {
-        invoiceItems.push({ ...product, quantity: quantityToAdd });
+    } else if (product.note && existingItemWithNote && existingItemWithNote.note === product.note) {
+        // إذا كان المنتج الذي يتم إضافته له ملاحظة، ووجد صنف بنفس الـ ID ونفس الملاحظة، قم بزيادة الكمية
+        existingItemWithNote.quantity += quantityToAdd;
+    }
+    else {
+        // إذا لم يتم العثور على صنف مطابق (بنفس الـ ID والملاحظة)، أضف صنفًا جديدًا.
+        // عند إضافة منتج جديد، الملاحظة تكون فارغة افتراضياً.
+        invoiceItems.push({ ...product, quantity: quantityToAdd, note: '' });
     }
     updateInvoice();
 }
@@ -121,18 +140,22 @@ function updateInvoice() {
     if (invoiceItems.length === 0) {
         invoiceItemsDiv.innerHTML = `<p class="empty-invoice">الفاتورة فارغة</p>`;
     } else {
-        invoiceItemsDiv.innerHTML = invoiceItems.map(item => `
-            <div class="invoice-item" data-product-id="${item.id}">
+        invoiceItemsDiv.innerHTML = invoiceItems.map((item, index) => `
+            <div class="invoice-item" data-product-id="${item.id}" data-item-index="${index}">
                 <div class="item-details">
                     <div class="item-name">${item.name}</div>
+                    ${item.note ? `<div class="item-note-text">${item.note}</div>` : ''}
                     <div class="item-price">${formatCurrency(item.price)}</div>
                 </div>
                 <div class="item-quantity">
-                    <button class="quantity-btn" data-id="${item.id}" data-action="decrease">-</button>
-                    <input type="number" class="item-quantity-input" data-id="${item.id}" value="${item.quantity}" min="1">
-                    <button class="quantity-btn" data-id="${item.id}" data-action="increase">+</button>
+                    <button class="quantity-btn" data-id="${item.id}" data-action="decrease" data-item-index="${index}">-</button>
+                    <input type="number" class="item-quantity-input" data-id="${item.id}" value="${item.quantity}" min="1" data-item-index="${index}">
+                    <button class="quantity-btn" data-id="${item.id}" data-action="increase" data-item-index="${index}">+</button>
                 </div>
                 <div class="item-total">${formatCurrency(item.quantity * item.price)}</div>
+                <div class="note-icon-container ${item.note ? 'has-note' : ''}" data-id="${item.id}" data-item-index="${index}">
+                    <i class="fa-solid fa-note-sticky"></i>
+                </div>
             </div>`).join('');
     }
     const amounts = calculateTotals();
@@ -140,7 +163,7 @@ function updateInvoice() {
     vatTotalSpan.textContent = formatCurrency(amounts.vat);
     serviceTotalSpan.textContent = formatCurrency(amounts.service);
     deliveryTotalSpan.textContent = formatCurrency(amounts.delivery);
-    
+
     // تحديث وعرض خصم نقاط الولاء
     const loyaltyDiscount = calculateLoyaltyDiscount(amounts.total);
     if (loyaltyDiscountApplied && loyaltyDiscount > 0) {
@@ -151,7 +174,7 @@ function updateInvoice() {
         loyaltyDiscountDisplay.style.display = 'none';
         grandTotalSpan.textContent = formatCurrency(amounts.total);
     }
-    
+
     deliveryRow.style.display = currentOrderType === 'delivery' ? 'contents' : 'none';
     finalizeButton.disabled = invoiceItems.length === 0;
 }
@@ -179,10 +202,10 @@ function calculateLoyaltyDiscount(currentTotal) {
     }
 
     applyLoyaltyDiscountCheckbox.disabled = false;
-    
+
     // حساب أقصى خصم ممكن بناءً على النقاط المتاحة
     const maxDiscountFromPoints = currentCustomerData.loyalty_points * pointsRedeemValue;
-    
+
     // الخصم لا يجب أن يتجاوز قيمة الفاتورة
     return Math.min(maxDiscountFromPoints, currentTotal);
 }
@@ -232,7 +255,7 @@ async function finalizeSale() {
     if (loyaltyDiscountApplied) {
         loyaltyDiscountAmount = calculateLoyaltyDiscount(amounts.total);
         totalAmountAfterDiscount = amounts.total - loyaltyDiscountAmount;
-        
+
         // حساب عدد النقاط التي تم استخدامها بناءً على الخصم
         const pointsRedeemValue = parseFloat(appSettings.pointsRedeemValue) || 0;
         if (pointsRedeemValue > 0) {
@@ -242,7 +265,7 @@ async function finalizeSale() {
 
     const saleData = {
         type: currentOrderType,
-        items: invoiceItems,
+        items: invoiceItems, // invoiceItems تحتوي الآن على حقل 'note'
         amounts: { ...amounts, total: totalAmountAfterDiscount, loyaltyDiscount: loyaltyDiscountAmount }, // إرسال الإجمالي بعد الخصم وقيمة الخصم
         paymentMethod,
         userId: currentUser.id,
@@ -251,7 +274,7 @@ async function finalizeSale() {
         transactionRef: null,
         pointsUsed: pointsUsed // إرسال عدد النقاط المستخدمة
     };
-    
+
     try {
         const result = await window.api.finalizeSale(saleData);
         if (result.success) {
@@ -280,7 +303,7 @@ function clearInvoice() {
     customerSearchResultsDiv.innerHTML = '';
     customerSearchResultsDiv.style.display = 'none';
     addressSelectionContainer.innerHTML = '<label for="customer-address">العنوان</label><input type="text" id="customer-address" required>';
-    
+
     // إعادة تعيين حالة نقاط الولاء
     loyaltyPointsSection.style.display = 'none';
     customerLoyaltyPointsSpan.textContent = '0 نقطة';
@@ -302,8 +325,8 @@ function setOrderType(type) {
 
 // دالة مساعدة لتحديث الكمية من مربع الإدخال
 function updateItemQuantityFromInput(inputElement) {
-    const productId = parseInt(inputElement.dataset.id);
-    const item = invoiceItems.find(i => i.id === productId);
+    const itemIndex = parseInt(inputElement.dataset.itemIndex);
+    const item = invoiceItems[itemIndex];
     if (item) {
         let newQuantity = parseInt(inputElement.value);
         if (isNaN(newQuantity) || newQuantity <= 0) {
@@ -313,6 +336,35 @@ function updateItemQuantityFromInput(inputElement) {
         item.quantity = newQuantity;
         updateInvoice();
     }
+}
+
+// دالة لفتح مودال الملاحظات
+function openNoteModal(itemIndex) {
+    currentNoteItemIndex = itemIndex;
+    const item = invoiceItems[itemIndex];
+    if (item) {
+        noteInput.value = item.note || ''; // Load existing note
+        noteModal.style.display = 'flex'; // Show the modal
+    }
+}
+
+// دالة لإغلاق مودال الملاحظات
+function closeNoteModal() {
+    noteModal.style.display = 'none';
+    noteInput.value = '';
+    currentNoteItemIndex = -1;
+}
+
+// دالة لحفظ الملاحظة
+function saveNote() {
+    if (currentNoteItemIndex !== -1) {
+        const item = invoiceItems[currentNoteItemIndex];
+        if (item) {
+            item.note = noteInput.value.trim();
+            updateInvoice(); // Update invoice to reflect the new note
+        }
+    }
+    closeNoteModal();
 }
 
 function setupEventListeners() {
@@ -329,18 +381,40 @@ function setupEventListeners() {
 
     document.body.addEventListener('click', (e) => {
         const target = e.target;
-        
+
         if (target.classList.contains('quantity-btn')) {
             e.stopPropagation();
-            const id = parseInt(target.dataset.id);
+            const itemIndex = parseInt(target.dataset.itemIndex);
             const action = target.dataset.action;
-            const item = invoiceItems.find(i => i.id === id);
+            const item = invoiceItems[itemIndex];
             if (item) {
                 if (action === 'increase') item.quantity++;
                 if (action === 'decrease') item.quantity--;
-                if (item.quantity <= 0) invoiceItems = invoiceItems.filter(i => i.id !== id);
+                if (item.quantity <= 0) {
+                    invoiceItems.splice(itemIndex, 1); // إزالة العنصر من المصفوفة
+                }
                 updateInvoice();
             }
+            return;
+        }
+
+        // معالج حدث لأيقونة الملاحظات
+        if (target.closest('.note-icon-container')) {
+            e.stopPropagation();
+            const itemIndex = parseInt(target.closest('.note-icon-container').dataset.itemIndex);
+            openNoteModal(itemIndex);
+            return;
+        }
+
+        // معالج حدث لزر إغلاق المودال
+        if (target.classList.contains('close-button')) {
+            closeNoteModal();
+            return;
+        }
+
+        // معالج حدث لزر حفظ الملاحظة
+        if (target.id === 'save-note-btn') {
+            saveNote();
             return;
         }
 
@@ -350,7 +424,7 @@ function setupEventListeners() {
             if (button.id === 'finalize-button') finalizeSale();
             if (button.closest('#order-type-selector')) setOrderType(button.dataset.type);
         }
-        
+
         const searchResultItem = target.closest('.customer-search-result');
         if (searchResultItem) {
             const selectedCustomer = JSON.parse(searchResultItem.dataset.customer);
@@ -370,6 +444,10 @@ function setupEventListeners() {
         if (target.classList.contains('item-quantity-input') && e.key === 'Enter') {
             updateItemQuantityFromInput(target);
             target.blur();
+        }
+        // إغلاق المودال عند الضغط على Escape
+        if (e.key === 'Escape' && noteModal.style.display === 'flex') {
+            closeNoteModal();
         }
     });
 
@@ -463,7 +541,7 @@ function renderCustomerSearchResults(results) {
 
 async function selectCustomer(customer) {
     currentCustomerData = customer;
-    
+
     // تحديث حقول الاسم ورقم الهاتف لكلا القسمين لضمان التناسق
     customerNameInput.value = customer.name;
     customerPhoneInput.value = customer.phone;
@@ -471,7 +549,7 @@ async function selectCustomer(customer) {
     dineInCustomerPhoneInput.value = customer.phone;
 
     customerSearchResultsDiv.style.display = 'none';
-    
+
     // عرض نقاط الولاء
     customerLoyaltyPointsSpan.textContent = `${customer.loyalty_points || 0} نقطة`;
     loyaltyPointsSection.style.display = 'block';
@@ -489,7 +567,7 @@ async function selectCustomer(customer) {
                 <label for="customer-address">اختر عنوانًا أو أدخل جديدًا</label>
                 <select id="customer-address-select" class="form-input">${options}</select>
                 <input type="text" id="customer-address" class="form-input" placeholder="أو أدخل عنوانًا جديدًا هنا" value="${addresses.find(a => a.is_default)?.address || ''}">`;
-            
+
             document.getElementById('customer-address-select').addEventListener('change', (e) => {
                 document.getElementById('customer-address').value = e.target.value;
             });

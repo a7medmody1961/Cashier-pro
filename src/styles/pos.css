@@ -1,8 +1,7 @@
 /*
   File: src/styles/pos.css
-  Version: 1.0 (New File)
-  Description: Contains all styles specific to the Point of Sale (POS) screen.
-  This file was created by refactoring the original main.css.
+  Version: 1.1
+  Description: Added styles for note icon and note modal.
 */
 
 .pos-layout {
@@ -132,12 +131,19 @@
 }
 .invoice-item {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto auto 30px; /* Added a column for the note icon */
     gap: 10px;
     align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid var(--color-border);
+    position: relative; /* For positioning the note text */
 }
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+}
+
 .item-details .item-name {
     font-weight: bold;
 }
@@ -145,6 +151,17 @@
     font-size: 0.9em;
     color: var(--color-text-muted);
 }
+
+.item-note-text {
+    font-size: 0.8em;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust as needed */
+}
+
 .item-quantity {
     display: flex;
     align-items: center;
@@ -281,3 +298,102 @@
         background-color: var(--color-primary-light);
         color: var(--color-primary);
     }
+
+/* Styles for the note icon */
+.note-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.note-icon-container:hover {
+    background-color: var(--color-primary-light);
+}
+
+.note-icon-container i {
+    color: var(--color-text-muted);
+    font-size: 1.1em;
+}
+
+.note-icon-container.has-note i {
+    color: var(--color-primary); /* Change color if note exists */
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--color-surface-solid);
+    margin: auto;
+    padding: 20px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.close-button {
+    color: var(--color-text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: var(--color-text);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#note-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    font-size: 1em;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    resize: vertical;
+}
+
+#save-note-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#save-note-btn:hover {
+    background-color: var(--color-primary-dark);
+}
